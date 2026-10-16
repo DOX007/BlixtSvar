@@ -22,6 +22,7 @@ import com.lillans.image.blixtsvar.core.RulePresets
 import com.lillans.image.blixtsvar.core.TriggerEngine
 import com.lillans.image.blixtsvar.core.TriggerRule
 import com.lillans.image.blixtsvar.data.RuleStore
+import androidx.core.widget.doAfterTextChanged
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -62,6 +63,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnLockRecentsHelp: Button
 
     private lateinit var store: RuleStore
+    private lateinit var etIgnoredText: EditText
+    private lateinit var btnSaveIgnored: Button
+    private lateinit var tvIgnoredStatus: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,6 +125,13 @@ class MainActivity : AppCompatActivity() {
         btnBatterySettings.setOnClickListener { openBatterySettings() }
         btnAutostartSettings.setOnClickListener { openAutoStartSettings() }
         btnLockRecentsHelp.setOnClickListener { showLockInRecentsHelpDialog() }
+
+        etIgnoredText = findViewById(R.id.etIgnoredText)
+        btnSaveIgnored = findViewById(R.id.btnSaveIgnored)
+        tvIgnoredStatus = findViewById(R.id.tvIgnoredStatus)
+        etIgnoredText.setText(store.loadIgnoredText())
+        btnSaveIgnored.setOnClickListener { saveIgnoredText() }
+        etIgnoredText.doAfterTextChanged { saveIgnoredText() }
 
         updatePatternModeUi()
         ensureDefaultsSeededOnce()
@@ -302,11 +313,23 @@ class MainActivity : AppCompatActivity() {
         toast("Regel sparad")
     }
 
+    private fun saveIgnoredText() {
+        store.saveIgnoredText(etIgnoredText.text.toString())
+        tvIgnoredStatus.text = getString(R.string.ignored_text_saved)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveIgnoredText()
+    }
+
     private fun runTest() {
         val msg = etTestMsg.text.toString()
-        val engine = TriggerEngine(store.load())
+        val engine = TriggerEngine(store.load(), etIgnoredText.text.toString())
         val hit = engine.match(msg)
-        tvTestResult.text = if (hit == null) {
+        tvTestResult.text = if (engine.isIgnoredRaw(msg)) {
+            "Ignorerad: SMS innehåller ignorera-texten."
+        } else if (hit == null) {
             "Ingen regel matchade."
         } else {
             "Match! Autosvar skulle bli:\n\"$hit\""

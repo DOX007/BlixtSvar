@@ -41,6 +41,12 @@ class RuleStore(ctx: Context) {
         persistRules(rules)
     }
 
+    fun loadIgnoredText(): String = prefs.getString("ignored_text", "") ?: ""
+
+    fun saveIgnoredText(text: String) {
+        prefs.edit().putString("ignored_text", text).apply()
+    }
+
     private fun persistRules(rules: List<TriggerRule>) {
         val arr = JSONArray()
         rules.forEach { r ->

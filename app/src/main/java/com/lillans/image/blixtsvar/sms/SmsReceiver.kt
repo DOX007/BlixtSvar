@@ -89,7 +89,7 @@ class SmsReceiver : BroadcastReceiver() {
             Log.d(TAG, "Rule[$idx]: id=${r.id} enabled=${r.enabled} pattern=/${r.pattern.pattern}/ reply=\"${r.reply}\"")
         }
 
-        val engine = TriggerEngine(rules)
+        val engine = TriggerEngine(rules, RuleStore(context).loadIgnoredText())
         val reply = engine.match(body) // OBS: vi skickar in *raw* här; TriggerEngine normaliserar
         if (reply == null) {
             Log.d(TAG, "Ingen match – autosvar skickas inte")
